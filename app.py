@@ -241,5 +241,3 @@ def clear_attendance():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-if __name__ == '__main__':
-    app.run(debug=True)
