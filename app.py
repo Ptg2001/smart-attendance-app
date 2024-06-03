@@ -16,18 +16,21 @@ from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 import base64
 import io
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'kdskkdielkaldow'
 
 # MongoDB Atlas configuration
-client = MongoClient("mongodb+srv://piyushhole:Piyushhole2001@ecom.neu3z5n.mongodb.net/")
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
 db = client.attendance_db
 
 # Mock user for simplicity
 users = {'admin': 'password'}
-
 
 def get_known_faces():
     face_encodings = []
@@ -38,11 +41,9 @@ def get_known_faces():
         face_names.append(record["name"])
     return face_encodings, face_names
 
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -54,14 +55,12 @@ def login():
             return redirect(url_for('dashboard'))
     return render_template('login.html')
 
-
 @app.route('/dashboard')
 def dashboard():
     if 'username' in session:
         attendance_records = db.attendance.find()
         return render_template('dashboard.html', attendance_records=attendance_records)
     return redirect(url_for('login'))
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -90,18 +89,16 @@ def register():
                 })
                 return redirect(url_for('dashboard'))
             else:
-                return "No face ound. Please try again.", 400
+                return "No face found. Please try again.", 400
 
         return render_template('register.html')
     return redirect(url_for('login'))
-
 
 @app.route('/mark_attendance')
 def mark_attendance():
     if 'username' in session:
         return render_template('mark_attendance.html')
     return redirect(url_for('login'))
-
 
 @app.route('/mark_attendance/facial', methods=['POST'])
 def mark_attendance_facial():
@@ -130,7 +127,6 @@ def mark_attendance_facial():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-
 @app.route('/mark_attendance/speech', methods=['POST'])
 def mark_attendance_speech():
     if 'username' in session:
@@ -158,7 +154,6 @@ def mark_attendance_speech():
 
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
-
 
 @app.route('/export')
 def export():
@@ -234,12 +229,10 @@ def export():
 
     return redirect(url_for('login'))
 
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
-
 
 @app.route('/clear_attendance')
 def clear_attendance():
@@ -247,8 +240,6 @@ def clear_attendance():
         db.attendance.delete_many({})
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
